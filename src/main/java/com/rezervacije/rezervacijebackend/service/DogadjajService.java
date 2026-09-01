@@ -11,8 +11,10 @@ import com.rezervacije.rezervacijebackend.mapper.DogadjajMapper;
 import com.rezervacije.rezervacijebackend.model.Dogadjaj;
 import com.rezervacije.rezervacijebackend.model.MestoOdrzavanja;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 /**
@@ -33,9 +35,14 @@ public class DogadjajService {
         this.mestoOdrzavanjaRepository = mestoOdrzavanjaRepository;
     }
 
-    public List<DogadjajDTO> search(String naziv) {
-        return repository.findByNazivContainingIgnoreCase(naziv).stream()
-                .map(mapper::toDogadjajDTO).collect(Collectors.toList());
+    /**
+     * Pretraga dogadjaja po nazivu (prazan string = svi dogadjaji), sortirano
+     * po datumu - najbliza sledeca dogadjanja prva.
+     */
+    public Page<DogadjajDTO> search(String naziv, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("datum").ascending());
+        String pojam = naziv != null ? naziv : "";
+        return repository.findByNazivContainingIgnoreCase(pojam, pageable).map(mapper::toDogadjajDTO);
     }
 
     public String create(DogadjajDTO dto) {

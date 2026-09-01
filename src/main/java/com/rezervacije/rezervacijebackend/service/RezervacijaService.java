@@ -15,10 +15,25 @@ import com.rezervacije.rezervacijebackend.model.Korisnik;
 import com.rezervacije.rezervacijebackend.model.Rezervacija;
 import com.rezervacije.rezervacijebackend.model.StatusRezervacije;
 import com.rezervacije.rezervacijebackend.model.Sto;
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import jakarta.transaction.Transactional;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 /**
@@ -158,14 +173,58 @@ public class RezervacijaService {
         }
     }
 
-    public List<RezervacijaDTO> getPending() {
-        return rezervacijaRepository.findByStatus(StatusRezervacije.NA_CEKANJU).stream()
-                .map(rezervacijaMapper::toRezervacijaDTO).collect(Collectors.toList());
+    public Page<RezervacijaDTO> getPending(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("idRezervacija").descending());
+        return rezervacijaRepository.findByStatus(StatusRezervacije.NA_CEKANJU, pageable)
+                .map(rezervacijaMapper::toRezervacijaDTO);
     }
 
-    public List<RezervacijaDTO> getAll() {
-        return rezervacijaRepository.findAll().stream()
-                .map(rezervacijaMapper::toRezervacijaDTO).collect(Collectors.toList());
+    public Page<RezervacijaDTO> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("idRezervacija").descending());
+        return rezervacijaRepository.findAll(pageable).map(rezervacijaMapper::toRezervacijaDTO);
+    }
+
+    /**
+     * Generise PDF izvestaj rezervacija. Ako je status null, exportuju se
+     * sve rezervacije, inace samo one sa prosledjenim statusom.
+     */
+    public byte[] exportPdf(StatusRezervacije status) {
+        List<Rezervacija> rezervacije = status != null
+                ? rezervacijaRepository.findByStatus(status)
+                : rezervacijaRepository.findAll();
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4);
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Font naslovFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+            String naslov = "Pregled rezervacija" + (status != null ? " - " + status : "");
+            document.add(new Paragraph(naslov, naslovFont));
+            document.add(new Paragraph(" "));
+
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            Stream.of("ID", "Gost", "Sto", "Dogadjaj", "Datum rezervacije", "Status")
+                    .forEach(h -> table.addCell(new PdfPCell(new Phrase(h, headerFont))));
+
+            for (Rezervacija r : rezervacije) {
+                table.addCell(String.valueOf(r.getIdRezervacija()));
+                table.addCell(r.getKorisnik() != null
+                        ? r.getKorisnik().getIme() + " " + r.getKorisnik().getPrezime() : "-");
+                table.addCell(r.getSto() != null ? r.getSto().getOznaka() : "-");
+                table.addCell(r.getDogadjaj() != null ? r.getDogadjaj().getNaziv() : "-");
+                table.addCell(r.getDatumRezervacije() != null ? r.getDatumRezervacije().toString() : "-");
+                table.addCell(r.getStatus() != null ? r.getStatus().toString() : "-");
+            }
+
+            document.add(table);
+            document.close();
+            return out.toByteArray();
+        } catch (Exception ex) {
+            throw new RuntimeException("Greska prilikom generisanja PDF-a.", ex);
+        }
     }
 
     public List<RezervacijaDTO> getByKorisnik(Long korisnikId) {

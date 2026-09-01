@@ -40,6 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/dogadjaji/delete/**",
                         "/rezervacije/pending",
                         "/rezervacije/all",
+                        "/rezervacije/export/pdf",
                         "/rezervacije/*/potvrdi",
                         "/rezervacije/*/odbij",
                         "/korisnici/all"

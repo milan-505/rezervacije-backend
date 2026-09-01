@@ -4,7 +4,9 @@
  */
 package com.rezervacije.rezervacijebackend.connection;
 
+import java.util.HashMap;
 import java.util.Map;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -18,5 +20,20 @@ public class HttpResponse {
 
     public static Response getResponse(String message, HttpStatus httpStatus) {
         return new Response(message, httpStatus);
+    }
+
+    /**
+     * Standardni oblik podataka za paginirane liste - "values" je sadrzaj
+     * trenutne stranice, ostalo su informacije o paginaciji koje frontend
+     * koristi da iscrta kontrole za listanje stranica.
+     */
+    public static Map<String, Object> pageData(Page<?> page) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("values", page.getContent());
+        data.put("trenutnaStranica", page.getNumber());
+        data.put("velicinaStranice", page.getSize());
+        data.put("ukupnoElemenata", page.getTotalElements());
+        data.put("ukupnoStranica", page.getTotalPages());
+        return data;
     }
 }

@@ -7,6 +7,8 @@ package com.rezervacije.rezervacijebackend.jparepo;
 import com.rezervacije.rezervacijebackend.model.Dogadjaj;
 import com.rezervacije.rezervacijebackend.model.MestoOdrzavanja;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -15,5 +17,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface DogadjajRepository extends JpaRepository<Dogadjaj, Long> {
     List<Dogadjaj> findByMestoOdrzavanja(MestoOdrzavanja mestoOdrzavanja);
-    List<Dogadjaj> findByNazivContainingIgnoreCase(String naziv);
+    Page<Dogadjaj> findByNazivContainingIgnoreCase(String naziv, Pageable pageable);
 }
