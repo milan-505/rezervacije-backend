@@ -60,11 +60,6 @@ public class RezervacijaService {
         this.dogadjajRepository = dogadjajRepository;
     }
 
-    /**
-     * Kreira rezervaciju. Korisnik koji je vlasnik rezervacije se cita iz
-     * sesije (korisnikId), a ne iz tela zahteva - da niko ne moze da
-     * rezervise "u ime" nekog drugog korisnika.
-     */
     public String create(RezervacijaDTO dto, Long korisnikId) {
         try {
             if (korisnikId == null) {
@@ -111,7 +106,7 @@ public class RezervacijaService {
             RezervacijaDTO zaCuvanje = new RezervacijaDTO();
             zaCuvanje.setBrojGostiju(dto.getBrojGostiju());
             zaCuvanje.setDatumRezervacije(dto.getDatumRezervacije() != null ? dto.getDatumRezervacije() : LocalDate.now());
-            zaCuvanje.setStatus(StatusRezervacije.NA_CEKANJU); // uvek isto na pocetku, ignorisemo sta posalje frontend
+            zaCuvanje.setStatus(StatusRezervacije.NA_CEKANJU);
 
             Rezervacija rezervacija = rezervacijaMapper.toRezervacijaEntity(zaCuvanje, korisnik, dogadjaj, sto, null);
             rezervacijaRepository.save(rezervacija);
@@ -146,10 +141,6 @@ public class RezervacijaService {
         }
     }
 
-    /**
-     * Otkazivanje rezervacije od strane gosta - samo dok je na cekanju i
-     * samo ako je zaista njegova.
-     */
     @Transactional
     public String cancel(Long rezervacijaId, Long korisnikId) {
         try {
@@ -179,15 +170,14 @@ public class RezervacijaService {
                 .map(rezervacijaMapper::toRezervacijaDTO);
     }
 
-    public Page<RezervacijaDTO> getAll(int page, int size) {
+    public Page<RezervacijaDTO> getAll(StatusRezervacije status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("idRezervacija").descending());
-        return rezervacijaRepository.findAll(pageable).map(rezervacijaMapper::toRezervacijaDTO);
+        Page<Rezervacija> rezultat = status != null
+                ? rezervacijaRepository.findByStatus(status, pageable)
+                : rezervacijaRepository.findAll(pageable);
+        return rezultat.map(rezervacijaMapper::toRezervacijaDTO);
     }
 
-    /**
-     * Generise PDF izvestaj rezervacija. Ako je status null, exportuju se
-     * sve rezervacije, inace samo one sa prosledjenim statusom.
-     */
     public byte[] exportPdf(StatusRezervacije status) {
         List<Rezervacija> rezervacije = status != null
                 ? rezervacijaRepository.findByStatus(status)

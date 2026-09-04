@@ -22,11 +22,6 @@ public class HttpResponse {
         return new Response(message, httpStatus);
     }
 
-    /**
-     * Standardni oblik podataka za paginirane liste - "values" je sadrzaj
-     * trenutne stranice, ostalo su informacije o paginaciji koje frontend
-     * koristi da iscrta kontrole za listanje stranica.
-     */
     public static Map<String, Object> pageData(Page<?> page) {
         Map<String, Object> data = new HashMap<>();
         data.put("values", page.getContent());

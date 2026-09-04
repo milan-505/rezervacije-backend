@@ -8,9 +8,6 @@ import java.io.IOException;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Isto kao AuthInterceptor, ali dodatno zahteva da prijavljeni korisnik
- * ima ulogu ADMINISTRATOR. Koristi se za endpoint-e koje sme da koristi
- * samo admin (potvrdjivanje/odbijanje rezervacija, CRUD nad dogadjajima...).
  *
  * @author Milan
  */

@@ -35,7 +35,7 @@ public class KorisnikController {
     
     @PostMapping("/register")
     public ResponseEntity<Response> register(@RequestBody KorisnikDTO dto) {
-        dto.setUloga(Uloga.GOST); // uvek isto na registraciji, ignorisemo sta posalje frontend
+        dto.setUloga(Uloga.GOST);
         String result = service.create(dto);
         return ResponseEntity.ok(HttpResponse.getResponseWithData(result, Map.of("value", result), HttpStatus.OK));
     }
@@ -47,8 +47,6 @@ public class KorisnikController {
             return ResponseEntity.ok(HttpResponse.getResponseWithData(
                     "Pogresno korisnicko ime ili lozinka", Map.of(), HttpStatus.UNAUTHORIZED));
         }
-        // Kreiramo sesiju i pamtimo ko je prijavljen - ovo dalje koriste
-        // AuthInterceptor/AdminInterceptor da zastite ostale endpoint-e.
         HttpSession session = request.getSession(true);
         session.setAttribute("idKorisnik", korisnik.getIdKorisnik());
         session.setAttribute("uloga", korisnik.getUloga());
@@ -56,8 +54,6 @@ public class KorisnikController {
                 "Uspesna prijava", Map.of("value", korisnik), HttpStatus.OK));
     }
 
-    // Koristi frontend da posle refresh-a stranice proveri da li je
-    // korisnik i dalje prijavljen (sesija jos vazi).
     @GetMapping("/session")
     public ResponseEntity<Response> session(HttpSession session) {
         Long idKorisnik = (Long) session.getAttribute("idKorisnik");

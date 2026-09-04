@@ -8,13 +8,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Zamenjuje pojedinacne @CrossOrigin anotacije na kontrolerima - CORS mora
- * da dozvoli "allowCredentials", jer sesija (JSESSIONID kolacic) putuje
- * izmedju frontenda (localhost:3000) i backend-a (localhost:8080) samo ako
- * je to eksplicitno dozvoljeno.
- *
- * Ovde su i registrovani interceptori koji predstavljaju nasu (jednostavnu,
- * bez Spring Security-ja) autentikaciju/autorizaciju zasnovanu na sesiji.
  *
  * @author Milan
  */

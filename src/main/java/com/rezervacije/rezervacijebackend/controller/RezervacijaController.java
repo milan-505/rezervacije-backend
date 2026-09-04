@@ -38,8 +38,6 @@ public class RezervacijaController {
         this.service = service;
     }
 
-    // Zasticeno AuthInterceptor-om - korisnik mora biti prijavljen.
-    // Vlasnik rezervacije se uzima iz sesije, ne iz tela zahteva.
     @PostMapping("/add")
     public ResponseEntity<Response> create(@RequestBody RezervacijaDTO dto, HttpSession session) {
         Long korisnikId = (Long) session.getAttribute("idKorisnik");
@@ -47,7 +45,6 @@ public class RezervacijaController {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(result, Map.of("value", result), HttpStatus.OK));
     }
 
-    // Zasticeno AuthInterceptor-om - gost moze da otkaze samo svoju rezervaciju.
     @PostMapping("/{id}/otkazi")
     public ResponseEntity<Response> cancel(@PathVariable Long id, HttpSession session) {
         Long korisnikId = (Long) session.getAttribute("idKorisnik");
@@ -55,26 +52,23 @@ public class RezervacijaController {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(result, Map.of("value", result), HttpStatus.OK));
     }
 
-    // Zasticeno AdminInterceptor-om.
     @GetMapping("/pending")
-    public ResponseEntity<Response> getPending(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Response> getPending(@RequestParam(name = "page", defaultValue = "0") int page,
+                                                @RequestParam(name = "size", defaultValue = "10") int size) {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(
                 "Rezervacije na cekanju!", HttpResponse.pageData(service.getPending(page, size)), HttpStatus.OK));
     }
 
-    // Zasticeno AdminInterceptor-om.
     @GetMapping("/all")
-    public ResponseEntity<Response> getAll(@RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Response> getAll(@RequestParam(name = "status", required = false) StatusRezervacije status,
+                                            @RequestParam(name = "page", defaultValue = "0") int page,
+                                            @RequestParam(name = "size", defaultValue = "10") int size) {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(
-                "Sve rezervacije!", HttpResponse.pageData(service.getAll(page, size)), HttpStatus.OK));
+                "Sve rezervacije!", HttpResponse.pageData(service.getAll(status, page, size)), HttpStatus.OK));
     }
 
-    // Zasticeno AdminInterceptor-om. status je opcioni filter (npr. ?status=POTVRDJENA);
-    // izostavljen = exportuju se sve rezervacije.
     @GetMapping("/export/pdf")
-    public ResponseEntity<byte[]> exportPdf(@RequestParam(required = false) StatusRezervacije status) {
+    public ResponseEntity<byte[]> exportPdf(@RequestParam(name = "status", required = false) StatusRezervacije status) {
         byte[] pdf = service.exportPdf(status);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=rezervacije.pdf")
@@ -82,7 +76,6 @@ public class RezervacijaController {
                 .body(pdf);
     }
 
-    // Zasticeno AdminInterceptor-om - adminId se uzima iz sesije, ne iz URL-a.
     @PostMapping("/{id}/potvrdi")
     public ResponseEntity<Response> confirm(@PathVariable Long id, HttpSession session) {
         Long adminId = (Long) session.getAttribute("idKorisnik");
@@ -90,7 +83,6 @@ public class RezervacijaController {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(result, Map.of("value", result), HttpStatus.OK));
     }
 
-    // Zasticeno AdminInterceptor-om - adminId se uzima iz sesije, ne iz URL-a.
     @PostMapping("/{id}/odbij")
     public ResponseEntity<Response> reject(@PathVariable Long id, HttpSession session) {
         Long adminId = (Long) session.getAttribute("idKorisnik");
@@ -98,8 +90,6 @@ public class RezervacijaController {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(result, Map.of("value", result), HttpStatus.OK));
     }
 
-    // Zasticeno AuthInterceptor-om - gost sme da vidi samo svoje rezervacije,
-    // administrator sme da vidi bilo cije.
     @GetMapping("/korisnik/{korisnikId}")
     public ResponseEntity<Response> getByKorisnik(@PathVariable Long korisnikId, HttpSession session) {
         Long sessionKorisnikId = (Long) session.getAttribute("idKorisnik");

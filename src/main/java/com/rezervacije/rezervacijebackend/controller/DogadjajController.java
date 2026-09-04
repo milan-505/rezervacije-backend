@@ -37,9 +37,10 @@ public class DogadjajController {
 
     // naziv je opcionalan - prazno/izostavljeno vraca sve dogadjaje (koristi se i za "pregled dogadjaja")
     @GetMapping("/pretraga")
-    public ResponseEntity<Response> search(@RequestParam(defaultValue = "") String naziv,
-                                            @RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<Response> search(@RequestParam(name = "naziv", defaultValue = "")
+                                            String naziv,
+                                            @RequestParam(name = "page", defaultValue = "0") int page,
+                                            @RequestParam(name = "size", defaultValue = "10") int size) {
         return ResponseEntity.ok(HttpResponse.getResponseWithData(
                 "Pronadjeni dogadjaji!", HttpResponse.pageData(service.search(naziv, page, size)), HttpStatus.OK));
     }

@@ -35,10 +35,6 @@ public class DogadjajService {
         this.mestoOdrzavanjaRepository = mestoOdrzavanjaRepository;
     }
 
-    /**
-     * Pretraga dogadjaja po nazivu (prazan string = svi dogadjaji), sortirano
-     * po datumu - najbliza sledeca dogadjanja prva.
-     */
     public Page<DogadjajDTO> search(String naziv, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("datum").ascending());
         String pojam = naziv != null ? naziv : "";
@@ -72,9 +68,12 @@ public class DogadjajService {
             }
             Dogadjaj entity = repository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Dogadjaj nije pronadjen."));
+            MestoOdrzavanja mesto = mestoOdrzavanjaRepository.findById(dto.getMestoOdrzavanja().getIdMestoOdrzavanja())
+                    .orElseThrow(() -> new RuntimeException("Mesto odrzavanja nije pronadjeno."));
             entity.setNaziv(dto.getNaziv());
             entity.setDatum(dto.getDatum());
             entity.setOpis(dto.getOpis());
+            entity.setMestoOdrzavanja(mesto);
             repository.save(entity);
             return "Dogadjaj je uspesno izmenjen!";
         } catch (Exception ex) {
